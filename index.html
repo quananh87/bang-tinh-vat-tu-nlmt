@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tính phụ kiện hệ NLMT</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f5f4;--card:#fff;--ink:#14262b;--mut:#5d7176;--line:#d5dedd;--acc:#0b6b73;--hi:#c77a0a;--hd:#e6efee;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1a1d;--card:#16262a;--ink:#e6f0ef;--mut:#93a9ad;--line:#2a3f44;--acc:#4fc3cc;--hi:#f0b04a;--hd:#1d3237;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1a1d;--card:#16262a;--ink:#e6f0ef;--mut:#93a9ad;--line:#2a3f44;--acc:#4fc3cc;--hi:#f0b04a;--hd:#1d3237;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Be Vietnam Pro",system-ui,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:24px;margin:0 0 4px}
+.sub{color:var(--mut);margin:0 0 18px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px;margin-bottom:16px}
+.panel h2{font-size:16px;margin:0 0 12px;color:var(--acc)}
+.seg{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.seg label{flex:1 1 200px;border:1px solid var(--line);border-radius:6px;padding:10px 12px;cursor:pointer;background:var(--bg)}
+.seg input{margin-right:8px;accent-color:var(--acc)}
+.seg label:has(input:checked){border-color:var(--acc);background:var(--hd)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.f label{display:block;font-size:13px;color:var(--mut);margin-bottom:3px}
+.f input,.f select{width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit}
+.f input:focus,.f select:focus,button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+.hide{display:none}
+.sum{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.sum div{background:var(--hd);border-radius:6px;padding:10px 12px}
+.sum b{display:block;font-size:20px;color:var(--hi)}
+.sum span{font-size:12.5px;color:var(--mut)}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:900px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--hd);font-size:13px}
+td.q{text-align:right;font-weight:700;white-space:nowrap}
+td.n{color:var(--mut);font-size:13px}
+.pr{width:112px;padding:5px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit;text-align:right}
+tr.st td{font-weight:700;background:var(--hd)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px}
+button{padding:9px 14px;border:1px solid var(--acc);background:var(--acc);color:#fff;border-radius:6px;font:inherit;cursor:pointer}
+button.o{background:transparent;color:var(--acc)}
+.note{color:var(--mut);font-size:13px}
+@media print{.in,.bar{display:none}body{background:#fff;color:#000}.panel{border-color:#999}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Tính phụ kiện hệ điện mặt trời</h1>
+<p class="sub">Nhập công suất pin và inverter, app liệt kê vật tư theo phương án áp mái hoặc dàn khung thép.</p>
+
+<div class="in">
+<div class="panel">
+<h2>Loại hệ và phương án lắp</h2>
+<div class="seg" id="sys">
+<label><input type="radio" name="sys" value="grid" checked>Hòa lưới</label>
+<label><input type="radio" name="sys" value="hybrid">Hybrid (có pin lưu trữ)</label>
+</div>
+<div class="seg" id="mode">
+<label><input type="radio" name="mode" value="roof" checked>Phương án 1: Áp mái</label>
+<label><input type="radio" name="mode" value="steel">Phương án 2: Dàn khung thép</label>
+</div>
+</div>
+
+<div class="panel">
+<h2>Tấm pin</h2>
+<div class="grid">
+<div class="f"><label>Công suất mỗi tấm (Wp)</label><input id="wp" type="number" value="550"></div>
+<div class="f"><label>Số tấm pin</label><input id="N" type="number" value="36"></div>
+<div class="f"><label>Cạnh ngắn tấm (m)</label><input id="pw" type="number" step="0.001" value="1.134"></div>
+<div class="f"><label>Số hàng pin (dãy)</label><input id="rows" type="number" value="3"></div>
+<div class="f"><label>Số tấm mỗi chuỗi (string)</label><input id="S" type="number" value="12"></div>
+<div class="f" id="fRoof"><label>Loại mái</label><select id="roofType"><option value="ton">Mái tôn</option><option value="ngoi">Mái ngói</option><option value="be">Mái bê tông</option></select></div>
+<div class="f hide" id="fCol"><label>Chiều dài thép cột trung bình (m)</label><input id="colLen" type="number" step="0.1" value="1.8"></div>
+</div>
+</div>
+
+<div class="panel">
+<h2>Inverter và đường dây</h2>
+<div class="grid">
+<div class="f"><label>Số inverter</label><input id="inv" type="number" value="1"></div>
+<div class="f"><label>Công suất mỗi inverter (kW)</label><input id="kw" type="number" step="0.1" value="15"></div>
+<div class="f"><label>Số pha</label><select id="ph"><option value="3">3 pha</option><option value="1">1 pha</option></select></div>
+<div class="f"><label>Số MPPT mỗi inverter</label><input id="mppt" type="number" value="2"></div>
+<div class="f"><label>Số đầu vào string mỗi inverter</label><input id="inputs" type="number" value="4"></div>
+<div class="f"><label>Cáp DC (mm²)</label><select id="dcs"><option>4</option><option selected>6</option></select></div>
+<div class="f"><label>Khoảng cách pin đến inverter (m)</label><input id="dcD" type="number" value="25"></div>
+<div class="f"><label>Khoảng cách inverter đến tủ AC (m)</label><input id="acD" type="number" value="15"></div>
+<div class="f"><label>Khoảng cách đến bãi tiếp địa (m)</label><input id="gD" type="number" value="15"></div>
+</div>
+</div>
+
+<div class="panel hide" id="pBat">
+<h2>Pin lưu trữ (hybrid)</h2>
+<div class="grid">
+<div class="f"><label>Dung lượng pin cần lắp (kWh)</label><input id="kwh" type="number" value="30"></div>
+<div class="f"><label>Dung lượng mỗi module (kWh)</label><input id="mod" type="number" step="0.01" value="5.12"></div>
+<div class="f"><label>Điện áp bus pin (V)</label><input id="bv" type="number" value="51.2"></div>
+<div class="f"><label>Khoảng cách pin đến inverter (m)</label><input id="bD" type="number" value="3"></div>
+<div class="f"><label>Số nhánh tải ưu tiên (Backup)</label><input id="bk" type="number" value="4"></div>
+</div>
+</div>
+</div>
+
+<div class="panel"><h2>Tổng quan hệ thống</h2><div class="sum" id="sum"></div></div>
+<div class="bar">
+<button id="bCsv">Tải file CSV</button>
+<button id="bPrint" class="o">In danh sách</button>
+</div>
+<div id="out"></div>
+<p class="note">Số lượng là ước tính sơ bộ để lập dự toán: ray 4,2 m, khoảng cách chân đỡ 1,2 m, pin lắp dọc (cạnh ngắn theo hàng). Tiết diện cáp và dòng CB tham khảo, cần đối chiếu catalog hãng và thiết kế thực tế trước khi mua.</p>
+</div>
+
+<script>
+var $=function(i){return document.getElementById(i)};
+var v=function(i){return +$(i).value||0};
+var cc=Math.ceil,last=[];
+function R(n){return document.querySelector('input[name="'+n+'"]:checked').value}
+function std(i){return [6,10,16,20,25,32,40,50,63,80,100,125,160,200,250,315,400,500,630].find(function(x){return x>=i})||cc(i)}
+function sec(i){var t=[[25,4],[32,6],[45,10],[60,16],[80,25],[100,35],[125,50],[160,70],[200,95],[250,120],[320,185]];for(var k=0;k<t.length;k++)if(i<=t[k][0])return t[k][1];return 240}
+function fmt(n){return (Math.round(n*10)/10).toLocaleString("vi-VN")}
+function calc(){
+var sys=R("sys"),mode=R("mode"),hy=sys==="hybrid",roof=mode==="roof",rt=$("roofType").value;
+var N=Math.max(1,v("N")),rows=Math.min(Math.max(1,v("rows")),N),w=v("pw"),S=Math.max(1,v("S"));
+var inv=Math.max(1,v("inv")),kw=v("kw"),ph=+$("ph").value,dcD=v("dcD"),acD=v("acD"),gD=v("gD");
+var perRow=cc(N/rows),rowLen=perRow*(w+0.02)+0.1,rRow=cc(rowLen/4.2);
+var rails=rows*2*rRow,splice=rows*2*(rRow-1),caps=rows*4,mid=2*(N-rows),end=4*rows;
+var feet=rows*2*(cc(rowLen/1.2)+1);
+var kWp=N*v("wp")/1000,str=cc(N/S),inputs=inv*v("inputs"),par=Math.max(0,str-inputs);
+var I=ph===3?kw*1000/(1.732*380*0.95):kw*1000/(220*0.95),Ib=std(I*1.25),Ic=sec(I*1.25),Itot=std(I*inv*1.25);
+var acCore=ph===3?"5 lõi (3P+N+PE)":"3 lõi (L+N+PE)",brk=function(a){return a>63?"MCCB":"MCB"};
+var G=[];
+// 1. Cơ khí
+var m=[["Thanh ray nhôm định hình","Dài 4,2 m, tiết diện theo hãng","cây",rails,rows+" hàng × 2 ray × "+rRow+" cây"],
+["Nối ray (Rail Splice)","Kèm bu lông","bộ",splice,"Số mối nối giữa các cây ray"],
+["Nắp bịt đầu ray","","cái",caps,"4 đầu ray mỗi hàng"],
+["Kẹp tiếp địa ray","Dùng khi khung yêu cầu","cái",rows*2,"1 kẹp mỗi ray đầu hàng"],
+["Pát kẹp giữa (Mid Clamp)","Điều chỉnh theo độ dày khung pin 30 đến 35 mm","bộ",mid,"2 × (số tấm − số hàng)"],
+["Pát kẹp biên (End Clamp)","Điều chỉnh theo độ dày khung pin","bộ",end,"4 kẹp mỗi hàng"],
+["Bu lông, đai ốc, long đền kẹp pin","Inox M8","bộ",mid+end,"Theo số kẹp"],
+["Đai ốc rãnh T (T-nut)","Nếu hệ kẹp dùng T-nut","cái",mid+end,"Theo số kẹp"]];
+if(roof){
+m.push(["Chân L (L-foot)","Khoảng cách 1,2 m","cái",feet,"Mỗi ray: dài ray ÷ 1,2 + 1"]);
+if(rt==="ton"){m.push(["Pát mái tôn","Kẹp seam hoặc chân bắt ốc, theo loại tôn","cái",feet,"1 pát mỗi chân L"],["Vít bắn tôn đầu lục giác, long đền EPDM","","cái",feet*2,"2 vít mỗi pát"],["Keo chống dột","Tuýp 300 ml","tuýp",cc(feet/12),"1 tuýp mỗi 12 điểm"])}
+if(rt==="ngoi"){m.push(["Móc mái ngói","Inox, theo loại ngói","cái",feet,"1 móc mỗi chân L"],["Bulông treo (hanger bolt)","Bắt vào xà gồ","cái",feet,"1 bulông mỗi chân"],["Keo chống dột","Tuýp 300 ml","tuýp",cc(feet/20),"Dặm các điểm khoan"])}
+if(rt==="be"){m.push(["Pát mái bê tông","Có đế","cái",feet,"1 pát mỗi chân L"],["Tắc kê nở / hóa chất M10","","cái",feet*2,"2 tắc kê mỗi pát"],["Đế nghiêng nâng góc","Nếu cần góc nghiêng","cái",feet,"Theo số pát"],["Vật liệu chống thấm","Tính theo kg","kg",cc(feet*0.1),"Khoảng 0,1 kg mỗi điểm khoan"])}
+m.push(["Bu lông inox, đai ốc, long đền phẳng","M8 liên kết chân L với ray và nối ray","bộ",feet+splice*4,"Chân L + 4 bộ mỗi mối nối"])}
+else{
+var fr=rows*(cc(rowLen/3)+1),col=fr*2,cl=v("colLen");
+m.push(["Cột thép hộp mạ kẽm","Quy cách 50×100 hoặc theo tính toán kết cấu","m",cc(col*cl),col+" cột × "+cl+" m, bước khung 3 m"],
+["Xà gồ thép hộp đỡ ray","Hộp 40×80 mạ kẽm","m",cc(rows*2*rowLen*1.05),"2 xà gồ mỗi hàng, hao hụt 5%"],
+["Giằng chéo","Thép V hoặc hộp 30×60","m",cc(fr*2*1.5),"2 thanh mỗi khung"],
+["Bản mã chân cột","Dày 8 mm","cái",col,"1 bản mã mỗi cột"],
+["Bulông neo M12","Dài 200 mm","cái",col*4,"4 bulông mỗi cột"],
+["Móng bê tông","0,4 × 0,4 × 0,5 m","m³",Math.round(col*0.08*100)/100,"1 móng mỗi cột"],
+["Pát liên kết ray với xà gồ","U-bolt hoặc pát chữ L","cái",feet,"Mỗi ray: dài ray ÷ 1,2 + 1"],
+["Bu lông inox, đai ốc, long đền phẳng","M8 và M10 liên kết ray, xà gồ","bộ",feet*2+splice*4,"Pát liên kết × 2 + mối nối × 4"],
+["Sơn chống gỉ, sơn dặm mối hàn","","bộ",1,"Theo khối lượng khung"])}
+m.push(["Kẹp cáp DC dưới tấm pin","","cái",N,"1 kẹp mỗi tấm"],["Kẹp cố định dây tiếp địa","","cái",rows*4,"4 kẹp mỗi hàng"]);
+G.push(["1. Ray, kẹp pin, chân đế và phụ kiện cơ khí ("+(roof?"áp mái":"dàn khung thép")+")",m]);
+// 2. Cáp DC
+var dl=cc(str*dcD*1.1);
+G.push(["2. Dây dẫn và kết nối DC",[
+["Cáp DC solar đỏ (+)",$("dcs").value+" mm², 1500 V","m",dl,str+" chuỗi × "+dcD+" m + 10%"],
+["Cáp DC solar đen (−)",$("dcs").value+" mm², 1500 V","m",dl,"Bằng cáp đỏ"],
+["Đầu nối MC4 (cặp đực/cái)","Tương thích đầu nối tấm pin","cặp",str*2,"2 cặp mỗi chuỗi (đầu pin và đầu inverter)"],
+["Đầu nối nối dài MC4","","cặp",str,"1 cặp mỗi chuỗi"],
+["Đầu nối chữ Y/T, bộ chia chuỗi","Khi thiết kế ghép song song chuỗi","cặp",par,"Số chuỗi vượt số đầu vào inverter"],
+["Đầu cos đồng DC","Theo đầu cực","cái",inv*4,"4 cái mỗi inverter"],
+["Kìm bấm MC4 chuyên dụng","Dụng cụ","bộ",1,""],
+["Dụng cụ tháo đầu nối MC4","Dụng cụ","bộ",1,""],
+["Ống bảo vệ cáp, kẹp giữ dây","","m",cc(dcD*1.2),"Theo chiều dài tuyến DC"],
+["Đầu siết cáp, phụ kiện chống nước","","cái",inv*4,"4 cái mỗi inverter"]]]);
+// 3. Bảo vệ DC
+G.push(["3. Thiết bị bảo vệ phía DC",[
+["CB DC chuyên dụng cho PV","1000 V DC, theo dòng chuỗi","cái",inv*v("mppt"),"1 cái mỗi MPPT, nếu inverter chưa tích hợp"],
+["Cầu dao cách ly DC (DC Isolator)","1000 V DC","cái",inv,"1 cái mỗi inverter, nếu chưa tích hợp"],
+["Cầu chì gPV","15 A, 1000 V DC","cái",par>0?str*2:0,"2 cầu chì mỗi chuỗi khi ghép song song"],
+["Đế giữ cầu chì gPV","","cái",par>0?str*2:0,"Theo số cầu chì"],
+["Chống sét lan truyền DC (SPD DC)","Type 2, 1000 V","bộ",inv*v("mppt"),"1 bộ mỗi MPPT"],
+["Tủ DC / hộp gom chuỗi (Combiner Box)","IP65 trở lên","cái",par>0?1:0,"Cần khi ghép song song chuỗi"],
+["Thanh DIN, cầu đấu DC, thanh tiếp địa trong tủ","","bộ",par>0?1:0,"Theo tủ DC"]]]);
+// 4. Bảo vệ AC
+var ac=[
+[brk(Ib)+" AC cho inverter",ph+"P, "+Ib+" A","cái",inv,"Dòng inverter "+fmt(I)+" A × 1,25"],
+[brk(Itot)+" tổng tại tủ AC",ph+"P, "+Itot+" A","cái",inv>1?1:0,"Tổng dòng các inverter × 1,25"],
+["RCBO / RCCB chống dòng rò",ph+"P, 30 mA, "+Ib+" A","cái",inv,"Nếu phù hợp yêu cầu inverter"],
+["Cầu dao cách ly AC",ph+"P, "+Itot+" A","cái",1,"Tại tủ AC"],
+["Chống sét lan truyền AC (SPD AC)","Type 2, "+(ph===3?"3P+N":"1P+N"),"bộ",1,""],
+["Tủ điện AC (ACDB)","IP54 trở lên","cái",1,""],
+["Thanh đồng phân phối","","bộ",1,""],
+["Thanh trung tính N và thanh tiếp địa PE","","bộ",1,""],
+["Cáp AC từ inverter đến tủ AC",Ic+" mm², "+acCore,"m",cc(acD*inv*1.05),"Tiết diện tham khảo, kiểm tra sụt áp"],
+["Cầu đấu, đầu cos, đầu siết cáp","","bộ",1,""],
+["Đèn báo pha",ph===3?"3 màu":"1 đèn","bộ",1,""]];
+if(hy)ac.push(["ATS hoặc bộ chuyển nguồn","Theo tải dự phòng","bộ",1,"Hybrid có tải dự phòng"],["Tủ tải ưu tiên (Backup Load)","","cái",1,""],["CB riêng cho nhánh tải ưu tiên",ph+"P hoặc 1P theo tải","cái",v("bk"),"1 cái mỗi nhánh"]);
+G.push(["4. Thiết bị bảo vệ phía AC",ac]);
+// 5. Tiếp địa
+var rods=Math.max(2,cc(kWp/30));
+G.push(["5. Vật tư tiếp địa",[
+["Dây đồng tiếp địa 16 mm²","Dây PE đúng tiết diện","m",cc(gD+(rods-1)*3),"Đến bãi tiếp địa"],
+["Dây liên kết đẳng thế 6 mm²","Khung, ray, vỏ inverter","m",cc(rows*(rowLen+1)),"Theo các hàng pin"],
+["Cọc tiếp địa mạ đồng","D16, dài 2,4 m","cọc",rods,"Tối thiểu 2 cọc"],
+["Kẹp nối cọc tiếp địa","","cái",rods,"1 kẹp mỗi cọc"],
+["Kẹp tiếp địa khung pin và ray","","cái",rows*2,"1 kẹp mỗi ray đầu hàng"],
+["Thanh đồng tiếp địa","","cái",1,"Trong tủ"],
+["Đầu cos đồng tiếp địa","","cái",rods*2+rows*2+4,""],
+["Hộp kiểm tra tiếp địa","","cái",rods,"1 hộp mỗi cọc"],
+["Thiết bị đo điện trở tiếp địa","Mượn hoặc thuê khi nghiệm thu","bộ",1,"Dụng cụ"]]]);
+// 6. Pin
+var mods=hy?cc(v("kwh")/(v("mod")||1)):0,Ibt=kw*1000/(v("bv")||48),Ibr=std(Ibt*1.25);
+if(hy)G.push(["6. Phụ kiện pin lưu trữ",[
+["Module pin lưu trữ",fmt(v("mod"))+" kWh, "+v("bv")+" V","cái",mods,"Tổng "+fmt(mods*v("mod"))+" kWh"],
+["CB hoặc cầu dao cách ly DC phía pin","DC, "+Ibr+" A","cái",inv,"Dòng pin "+fmt(Ibt)+" A × 1,25"],
+["Cầu chì bảo vệ pin","Nếu hãng yêu cầu","cái",inv,"1 cái mỗi inverter"],
+["Cáp nguồn pin – inverter",sec(Ibt*1.25)+" mm², 2 sợi","m",cc(v("bD")*2*inv*1.05),"Tiết diện tham khảo"],
+["Đầu cos ép thủy lực, nắp cách điện","","cái",inv*4,"4 cái mỗi inverter"],
+["Cáp truyền thông CAN/RS485","Pin đến inverter","sợi",inv,"1 sợi mỗi inverter"],
+["Điện trở kết thúc đường truyền","Nếu hãng yêu cầu","cái",inv,""],
+["Cáp nối giữa các module pin","Theo hãng","bộ",Math.max(0,mods-1),"Số module − 1"],
+["Giá đỡ, rack pin","Mỗi rack 4 module","bộ",cc(mods/4),""],
+["Dây tiếp địa vỏ pin và vỏ inverter","","sợi",mods+inv,""],
+["Phụ kiện thông gió, bảo vệ khu vực pin","Theo hướng dẫn hãng","bộ",1,""]]);
+// 7. Đo đếm
+G.push(["7. Vật tư đo đếm và giám sát",[
+["Công tơ đo điện năng",ph+" pha","cái",1,""],
+["Smart Meter / CT kẹp dòng","Theo yêu cầu inverter","bộ",1,""],
+["Bộ CT, dây tín hiệu, đầu nối","","bộ",ph===3?3:1,"1 CT mỗi pha"],
+["Bộ truyền dữ liệu Wi-Fi/LAN/4G hoặc datalogger","","bộ",1,""],
+["Cáp RS485","","m",cc(acD+10),"Inverter đến meter và datalogger"],
+["Cáp mạng LAN","","m",20,""],
+["Đầu RJ45","","cái",4,""],
+["Nhãn cáp, nhãn cảnh báo DC và nhãn tủ điện","","bộ",1,""]]]);
+// 8. Phụ trợ
+var run=dcD+acD+(hy?v("bD"):0);
+G.push(["8. Vật tư phụ trợ",[
+["Ống luồn dây PVC/HDPE","Cây 3 m, chống UV ngoài trời","cây",cc(run/3),"Toàn tuyến cáp"],
+["Máng cáp, thang cáp và nắp máng","Ước tính 50% tuyến","m",cc(run*0.5),"Chưa gồm co, tê"],
+["Co, tê, nối ống, đầu bịt ống","","cái",cc(run/3)*2,"2 phụ kiện mỗi cây ống"],
+["Đầu siết cáp chống nước","","cái",inv*4+4,""],
+["Dây rút chống UV, kẹp cáp, đai giữ ống","","cái",N*4,"4 cái mỗi tấm"],
+["Vít, tắc kê, bu lông cố định","","bộ",rows*4,""],
+["Silicone, keo ngoài trời","","tuýp",roof?cc(feet/20)+2:2,""],
+["Băng keo điện, ống co nhiệt, vật liệu đánh dấu dây","","bộ",cc(str/2)+2,""],
+["Nhãn cảnh báo, sơ đồ đấu nối, nhãn DC/AC","","bộ",1,""],
+["Thiết bị đo cách điện, đồng hồ vạn năng","Dụng cụ kiểm tra","bộ",1,""],
+["Vật tư vệ sinh, hoàn thiện công trình","","bộ",1,""]]]);
+G.forEach(function(g){g[1]=g[1].filter(function(r){return r[3]>0})});
+var ratio=kw*inv?kWp/(kw*inv):0;
+$("sum").innerHTML=[[fmt(kWp)+" kWp","Công suất pin ("+N+" tấm)"],[fmt(kw*inv)+" kW","Tổng công suất inverter"],[fmt(ratio),"Tỉ lệ DC/AC"],[str+" chuỗi","Mỗi chuỗi "+S+" tấm"],[fmt(I)+" A","Dòng AC mỗi inverter"],[hy?fmt(mods*v("mod"))+" kWh":"Không có","Pin lưu trữ"]].map(function(x){return "<div><b>"+x[0]+"</b><span>"+x[1]+"</span></div>"}).join("");
+var html="";
+G.forEach(function(g){html+='<div class="panel"><h2>'+g[0]+'</h2><div class="tw"><table><tr><th>Tên vật tư</th><th>Quy cách</th><th>ĐVT</th><th style="text-align:right">SL</th><th style="text-align:right">Đơn giá (VNĐ)</th><th style="text-align:right">Thành tiền</th><th>Cách tính</th></tr>'+g[1].map(function(r){var k=r[0].replace(/"/g,"&quot;");return "<tr data-q='"+r[3]+"'><td>"+r[0]+"</td><td class='n'>"+r[1]+"</td><td>"+r[2]+"</td><td class='q'>"+fmt(r[3])+"</td><td class='q'><input class='pr' type='number' min='0' step='1000' data-k=\""+k+"\" value=\""+(P[r[0]]||"")+"\" placeholder='0'></td><td class='q rt'>0</td><td class='n'>"+r[4]+"</td></tr>"}).join("")+"<tr class='st'><td colspan='5'>Cộng nhóm</td><td class='q gs'>0</td><td></td></tr></table></div></div>"});
+html+='<div class="panel"><h2>Tổng cộng vật tư</h2><div class="sum"><div><b id="gtAll">0</b><span>VNĐ</span></div></div></div>';
+$("out").innerHTML=html;last=G;tot();
+}
+var P={};try{P=JSON.parse(localStorage.getItem("pk_prices")||"{}")}catch(e){}
+function tot(){var all=0;document.querySelectorAll("#out table").forEach(function(t){var s=0;t.querySelectorAll("tr[data-q]").forEach(function(tr){var p=+tr.querySelector(".pr").value||0,a=Math.round(p*tr.dataset.q);s+=a;tr.querySelector(".rt").textContent=a.toLocaleString("vi-VN")});t.querySelector(".gs").textContent=s.toLocaleString("vi-VN");all+=s});$("gtAll").textContent=all.toLocaleString("vi-VN")}
+$("out").addEventListener("input",function(e){if(e.target.classList.contains("pr")){P[e.target.dataset.k]=+e.target.value||0;try{localStorage.setItem("pk_prices",JSON.stringify(P))}catch(x){}tot()}});
+function csv(){
+var L=["Nhóm,Tên vật tư,Quy cách,ĐVT,Số lượng,Đơn giá,Thành tiền,Cách tính"];
+last.forEach(function(g){g[1].forEach(function(r){L.push([g[0],r[0],r[1],r[2],r[3],P[r[0]]||0,Math.round((P[r[0]]||0)*r[3]),r[4]].map(function(c){return '"'+String(c).replace(/"/g,'""')+'"'}).join(","))})});
+var b=new Blob(["\ufeff"+L.join("\n")],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");
+a.href=URL.createObjectURL(b);a.download="phu-kien-nlmt.csv";a.click();
+}
+function vis(){
+var hy=R("sys")==="hybrid",roof=R("mode")==="roof";
+$("pBat").classList.toggle("hide",!hy);$("fRoof").classList.toggle("hide",!roof);$("fCol").classList.toggle("hide",roof);
+}
+document.querySelector(".in").addEventListener("input",function(){vis();calc()});
+$("bCsv").onclick=csv;$("bPrint").onclick=function(){window.print()};
+vis();calc();
+</script>
+</body>
+</html>
